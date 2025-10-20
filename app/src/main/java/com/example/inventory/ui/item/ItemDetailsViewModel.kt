@@ -19,7 +19,8 @@ package com.example.inventory.ui.item
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.inventory.data.ItemsRepository
-
+import kotlinx.coroutines.launch
+import androidx.lifecycle.viewModelScope
 /**
  * ViewModel to retrieve, update and delete an item from the [ItemsRepository]'s data source.
  */
@@ -42,3 +43,14 @@ data class ItemDetailsUiState(
     val outOfStock: Boolean = true,
     val itemDetails: ItemDetails = ItemDetails()
 )
+fun reduceQuantityByOne() {
+    viewModelScope.launch {
+        val currentItem = uiState.value.itemDetails.toItem()
+        if (currentItem.quantity > 0) {
+            itemsRepository.updateItem(currentItem.copy(quantity = currentItem.quantity - 1))
+        }
+    }
+}
+suspend fun deleteItem() {
+    itemsRepository.deleteItem(uiState.value.itemDetails.toItem())
+}

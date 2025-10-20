@@ -65,6 +65,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
+
+val coroutineScope = rememberCoroutineScope()
 
 
 object ItemDetailsDestination : NavigationDestination {
@@ -81,6 +86,7 @@ fun ItemDetailsScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ItemDetailsViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    val coroutineScope = rememberCoroutineScope()
     val uiState: StateFlow<ItemDetailsUiState> =
         itemsRepository.getItemStream(itemId)
             .filterNotNull()
@@ -99,13 +105,10 @@ fun ItemDetailsScreen(
                 navigateUp = navigateBack
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navigateToEditItem(0) },
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
-
-            ) {
+        FloatingActionButton(
+            onClick = { navigateToEditItem(uiState.value.itemDetails.id) },
+            modifier = /*...*/
+        ){
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = stringResource(R.string.edit_item_title),
@@ -130,10 +133,10 @@ fun ItemDetailsScreen(
 
 @Composable
 private fun ItemDetailsBody(
-    itemUiState = uiState.value,
-    onSellItem = {  },
-    onDelete = { },
-    modifier = modifier.padding(innerPadding)
+    itemUiState: ItemUiState,
+    onSellItem: () -> Unit,
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.padding(dimensionResource(id = R.dimen.padding_medium)),

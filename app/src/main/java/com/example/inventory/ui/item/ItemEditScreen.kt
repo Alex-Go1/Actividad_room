@@ -62,15 +62,14 @@ fun ItemEditScreen(
     ) { innerPadding ->
         ItemEntryBody(
             itemUiState = viewModel.itemUiState,
-            onItemValueChange = { },
-            onSaveClick = { },
-            modifier = Modifier
-                .padding(
-                    start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
-                    end = innerPadding.calculateEndPadding(LocalLayoutDirection.current),
-                    top = innerPadding.calculateTopPadding()
-                )
-                .verticalScroll(rememberScrollState())
+            onItemValueChange = viewModel::updateUiState,
+            onSaveClick = {
+                coroutineScope.launch {
+                    viewModel.updateItem()
+                    navigateBack()
+                }
+            },
+            modifier = modifier.padding(innerPadding)
         )
     }
 }
