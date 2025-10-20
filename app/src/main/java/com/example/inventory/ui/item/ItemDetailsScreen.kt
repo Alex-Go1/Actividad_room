@@ -57,6 +57,15 @@ import com.example.inventory.R
 import com.example.inventory.data.Item
 import com.example.inventory.ui.navigation.NavigationDestination
 import com.example.inventory.ui.theme.InventoryTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.inventory.ui.AppViewModelProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+
 
 object ItemDetailsDestination : NavigationDestination {
     override val route = "item_details"
@@ -70,8 +79,18 @@ object ItemDetailsDestination : NavigationDestination {
 fun ItemDetailsScreen(
     navigateToEditItem: (Int) -> Unit,
     navigateBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+    modifier: Modifier = Modifier,
+    viewModel: ItemDetailsViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    val uiState: StateFlow<ItemDetailsUiState> =
+        itemsRepository.getItemStream(itemId)
+            .filterNotNull()
+            .map {
+                ItemDetailsUiState(itemDetails = it.toItemDetails())
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = ItemDetailsUiState()
+            ){
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -111,17 +130,19 @@ fun ItemDetailsScreen(
 
 @Composable
 private fun ItemDetailsBody(
-    itemDetailsUiState: ItemDetailsUiState,
-    onSellItem: () -> Unit,
-    onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    itemUiState = uiState.value,
+    onSellItem = {  },
+    onDelete = { },
+    modifier = modifier.padding(innerPadding)
 ) {
     Column(
         modifier = modifier.padding(dimensionResource(id = R.dimen.padding_medium)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_medium))
     ) {
         var deleteConfirmationRequired by rememberSaveable { mutableStateOf(false) }
-
+        ItemDetails(
+            item = itemDetailsUiState.itemDetails.toItem(), modifier = Modifier.fillMaxWidth()
+        )
         ItemDetails(
             item = itemDetailsUiState.itemDetails.toItem(),
             modifier = Modifier.fillMaxWidth()
@@ -250,3 +271,5 @@ fun ItemDetailsScreenPreview() {
         )
     }
 }
+
+
